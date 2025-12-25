@@ -1,53 +1,28 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
-import { NotesColumnData } from "@/app/(pages)/dashboard/types";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Product } from "@/app/(pages)/dashboard/types";
 import { DateTime } from "luxon";
 import { Badge } from "@/components/ui/badge";
 
-export const columns: ColumnDef<NotesColumnData>[] = [
+export const columns: ColumnDef<Product>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <div
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: "name",
+    header: "Nome",
   },
   {
-    accessorKey: "title",
-    header: "Título",
-  },
-  {
-    accessorKey: "type",
-    header: "Tipo",
+    accessorKey: "category",
+    header: "Categoria",
     cell: ({ row }) => {
-      const type = row.original.type.toLowerCase();
+      const type = row.original.category.toUpperCase();
       const types: { [key: string]: string } = {
-        personal: "Pessoal",
-        work: "Trabalho",
-        study: "Estudo",
-        ideia: "Ideia",
-        reminder: "Lembrete",
-        todo: "Para Fazer",
-        meeting: "Meeting",
+        electronics: "Eletrônicos",
+        furniture: "Móveis",
+        clothing: "Roupas",
+        books: "Livros",
+        toys: "Brinquedos",
+        food: "Alimentos",
+        other: "Outros",
       };
       return <Badge>{types[type] || type}</Badge>;
     },
@@ -58,6 +33,20 @@ export const columns: ColumnDef<NotesColumnData>[] = [
     cell: (props) => {
       const date = DateTime.fromISO(props.row.original.createdAt);
       return date.setLocale("pt-BR").toLocaleString(DateTime.DATETIME_SHORT);
+    },
+  },
+  {
+    accessorKey: "price",
+    header: "Preço",
+    cell: ({ row }) => {
+      return (
+        <div>
+          {new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(row.original.price)}
+        </div>
+      );
     },
   },
   {

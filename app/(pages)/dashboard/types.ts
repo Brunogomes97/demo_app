@@ -1,27 +1,21 @@
-export type NoteData = {
-    id: string,
-    title: string,
-    createdAt: string,
-    type: 'personal' | 'work' | 'study' | 'ideia' | 'reminder' | 'todo',
-    description: string
-
-}
-
-export type FetchingNoteData = {
-    data: [NoteData];
-    total_items: number;
-    offset: number;
-    limit: number;
-    search: string;
+export type Product = {
+  id: string;
+  userId: string;
+  name: string;
+  price: number;
+  category: string;
+  description?: string;
+  createdAt: string;
 };
 
+export type FetchingProductData = {
+  items: Product[];
+  total: number;
+};
 
-export type NoteCreateForm = {
-    title: string,
-    type: 'personal' | 'work' | 'study' | 'ideia' | 'reminder' | 'todo',
-    description: string
-}
-
-export type NoteEditForm = NoteCreateForm
-export type NotesColumnData = NoteData
-export type NoteResponseData = NoteData
+export type ProductCreateForm = {
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+};

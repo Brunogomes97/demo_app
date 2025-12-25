@@ -1,13 +1,19 @@
+"use client";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { MobileSidebar } from "./mobile-sidebar";
 import { UserNav } from "./user-nav";
-import { UserProps } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { getClientSession } from "@/hooks/provider";
 
-interface HeaderProps {
-  user: UserProps | null;
-}
-export default function Header({ user }: HeaderProps) {
+export default function Header() {
+  const { data, isLoading } = useQuery(getClientSession());
+
+  const user = {
+    id: data?.user?.id ?? "",
+    username: data?.user?.username ?? "",
+    email: data?.user?.email ?? "",
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 supports-backdrop-blur:bg-background/60 border-b bg-background/95 backdrop-blur z-20">
@@ -31,7 +37,7 @@ export default function Header({ user }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <UserNav user={user} />
+          <UserNav user={user} loading={isLoading} />
           <ThemeToggle />
         </div>
       </nav>

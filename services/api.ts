@@ -3,26 +3,28 @@ import { baseURL } from "./url";
 
 export async function fetchAPI<T = unknown>(
   input: RequestInfo | URL,
-  init?: RequestInit | undefined,
+  init?: RequestInit | undefined
 ) {
   const cookiesStore = await cookies();
   const accessToken = cookiesStore.get("access_token");
-
 
   const response = await fetch(`${baseURL}/${input}`, {
     ...init,
     credentials: "include",
     headers: {
-      // Cookie: `access_token=${accessToken?.value}`,
       Authorization: `Bearer ${accessToken?.value}`,
       "Content-Type": "application/json",
-    }
+    },
   });
 
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(`Erro ${result.statusCode || response.status}: ${result.message || "Erro desconhecido"}`);
+    throw new Error(
+      `Erro ${result.statusCode || response.status}: ${
+        result.message || "Erro desconhecido"
+      }`
+    );
   }
   return result as T;
 }

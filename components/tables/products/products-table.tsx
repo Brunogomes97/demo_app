@@ -35,15 +35,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ColumnsOptions } from "@/components/tables/column-selector";
 import FilterButton from "@/components/buttons/filter-button";
-import { NotesColumnData } from "@/app/(pages)/dashboard/types";
 import ShowNoteDialog from "@/components/dialogs/show-note-dialog";
-import { RemoveButton } from "@/components/buttons/remove-button";
-import { AlertModal } from "@/components/modal/alert-modal";
-import { Badge } from "@/components/ui/badge";
-import { removeManyNotes } from "@/app/(pages)/dashboard/actions";
-import { noteTypeObjectFormatReverse } from "@/components/constants/data";
-import { toast } from "@/hooks/use-toast";
-import { ApiErrorProps } from "@/lib/types";
+import { Product } from "@/app/(pages)/dashboard/types";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -63,12 +56,10 @@ export function NotesTable<TData, TValue>({
   columns,
   data = [],
   searchKey = "",
-  // pageNo = 1,
-  // totalItems = 0,
   pageCount = 1,
   pageSizeOptions = [5, 10, 20, 30, 40, 50],
   tableName = "Espécie",
-}: DataTableProps<TData, TValue>) {
+}: Readonly<DataTableProps<TData, TValue>>) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -76,42 +67,28 @@ export function NotesTable<TData, TValue>({
   const page = searchParams?.get("page") ?? "1";
   const pageAsNumber = Number(page);
   const fallbackPage =
-    isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
+    Number.isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
   const per_page = searchParams?.get("limit") ?? "5";
   const perPageAsNumber = Number(per_page);
-  const fallbackPerPage = isNaN(perPageAsNumber) ? 5 : perPageAsNumber;
+  const fallbackPerPage = Number.isNaN(perPageAsNumber) ? 5 : perPageAsNumber;
 
-  const typeOptions = [
-    { title: "Todos", value: null },
-    { title: "Pessoal", value: "personal" },
-    { title: "Trabalho", value: "work" },
-    { title: "Estudo", value: "study" },
-    { title: "Ideia", value: "ideia" },
-    { title: "Lembrete", value: "reminder" },
-    { title: "Para fazer", value: "todo" },
-    { title: "Meeting", value: "meeting" }
+  const categoryOptions = [
+    { title: "Eletrônicos", value: "Eletrônicos" },
+    { title: "Móveis", value: "Móveis" },
+    { title: "Roupas", value: "Roupas" },
+    { title: "Livros", value: "Livros" },
+    { title: "Brinquedos", value: "Brinquedos" },
+    { title: "Alimentos", value: "Alimentos" },
+    { title: "Outros", value: "Outros" },
+    { title: "Todos", value: "" },
   ];
 
   const optionsList = {
-    type: typeOptions,
-    order: [{ title: "Mais antigo", value: "asc" }, { title: "Mais recente", value: null }],
+    category: categoryOptions,
   };
   const [open, setOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<NotesColumnData | null>(
-    null,
-  );
-  const [removeManyOpen, setRemoveAllOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<Product | null>(null);
 
-
-  /* this can be used to get the selectedrows 
-  console.log("value", table.getFilteredSelectedRowModel()); 
-
-  */
-
-
-
-
-  // Create query string
   const createQueryString = React.useCallback(
     (params: Record<string, string | number | null>) => {
       const newSearchParams = new URLSearchParams(searchParams?.toString());
@@ -126,10 +103,9 @@ export function NotesTable<TData, TValue>({
 
       return newSearchParams.toString();
     },
-    [searchParams],
+    [searchParams]
   );
 
-  // Handle server-side pagination
   const [{ pageIndex, pageSize }, setPagination] =
     React.useState<PaginationState>({
       pageIndex: fallbackPage - 1,
@@ -144,7 +120,7 @@ export function NotesTable<TData, TValue>({
       })}`,
       {
         scroll: false,
-      },
+      }
     );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,7 +153,7 @@ export function NotesTable<TData, TValue>({
         })}`,
         {
           scroll: false,
-        },
+        }
       );
     }
     if (searchValue?.length === 0 || searchValue === undefined) {
@@ -189,7 +165,7 @@ export function NotesTable<TData, TValue>({
         })}`,
         {
           scroll: false,
-        },
+        }
       );
     }
 
@@ -197,72 +173,10 @@ export function NotesTable<TData, TValue>({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue]);
-  const selectedRows = table.getFilteredSelectedRowModel();
-  const selectedItems = selectedRows.rows.map((row) => row.original) as NotesColumnData[];
-
-  const RemoveManyContent = () => {
-    return (
-      <>
-        <div className="text-sm border rounded-md p-2">
-          <div className="grid grid-cols-3 text-muted-foreground gap-4 mb-2">
-            <span>Título</span>
-            <span>Tipo</span>
-            <span>Data</span>
-          </div>
-          <div className="grid grid-cols-3 overflow-y-auto max-h-40 gap-4">
-            {selectedItems.map((item) => (
-              <React.Fragment key={item.id}>
-                <span>{item.title}</span>
-                <Badge variant={"secondary"} className="h-fit w-fit">
-                  {noteTypeObjectFormatReverse[item.type]}
-                </Badge>
-                <span>{new Intl.DateTimeFormat("pt-BR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(item.createdAt))}</span>
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  const handleRemoveItems = async () => {
-    try {
-      await removeManyNotes(selectedItems.map((item) => item.id))
-      toast({
-        variant: "success",
-        title: "Sucesso.",
-        description: "Notas removidas com sucesso!",
-      })
-
-    } catch (error: unknown) {
-      const err = error as ApiErrorProps;
-      toast({
-        variant: "destructive",
-        title: "Erro.",
-        description: "Ocorreu um erro ao remover as notas!",
-      })
-      console.log(err);
-
-    } finally {
-      setRemoveAllOpen(false)
-      table.toggleAllPageRowsSelected(false)
-    }
-  }
-
 
   return (
     <>
       <ShowNoteDialog data={selectedRow} open={open} setOpen={setOpen} />
-      <AlertModal
-        title={`Deseja remover as notas selecionadas?`}
-        description={`Esta ação é destrutiva e não poderá ser desfeita. Confirme se deseja prosseguir.`}
-        confirmVariant="destructive"
-        isOpen={removeManyOpen}
-        onClose={() => setRemoveAllOpen(false)}
-        onConfirm={handleRemoveItems}
-        loading={false}
-        content={<RemoveManyContent />}
-      />
       <div className="flex items-center">
         <Input
           placeholder={`${"Título da"} ${tableName}...`}
@@ -272,13 +186,16 @@ export function NotesTable<TData, TValue>({
           }
           className="w-full md:max-w-sm"
         />
-        <FilterButton name="Tipos" filterKey="type" list={optionsList.type} className="mx-2" />
-        <FilterButton name="Ordenação" filterKey="order" list={optionsList.order} className="mx-2" />
-        <RemoveButton className="mr-2" disabled={selectedItems.length === 0} items={selectedItems} onClick={() => setRemoveAllOpen(true)} />
+        <FilterButton
+          name="Categoria"
+          filterKey="category"
+          list={optionsList.category}
+          className="mx-2"
+        />
+
         <ColumnsOptions columns={table.getAllColumns()} />
       </div>
       <div className="border rounded-md">
-
         <Table className="relative">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -289,9 +206,9 @@ export function NotesTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -309,14 +226,14 @@ export function NotesTable<TData, TValue>({
                     <TableCell
                       onClick={() => {
                         setOpen(true);
-                        setSelectedRow(row.original as NotesColumnData);
+                        setSelectedRow(row.original as Product);
                       }}
                       key={cell.id}
-                      className="cursor-pointer truncate max-w-[250px] whitespace-nowrap overflow-hidden">
-
+                      className="cursor-pointer truncate max-w-[250px] whitespace-nowrap overflow-hidden"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}

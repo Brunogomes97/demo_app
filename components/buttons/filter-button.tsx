@@ -12,15 +12,12 @@ import { ListFilter } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-
 interface FilterButtonProps {
   name: string;
-  list: { title: string, value: string | null }[];
+  list: { title: string; value: string | null }[];
   filterKey: string; // Adicione uma chave para identificar o filtro
-  className?: string
+  className?: string;
 }
-
-
 
 export default function FilterButton({
   list,
@@ -28,7 +25,6 @@ export default function FilterButton({
   filterKey,
   className,
 }: FilterButtonProps) {
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -50,7 +46,7 @@ export default function FilterButton({
 
       return newSearchParams.toString();
     },
-    [searchParams],
+    [searchParams]
   );
   useEffect(() => {
     const newQuery = createQueryString({ [filterKey]: selectedFilter });
@@ -60,10 +56,16 @@ export default function FilterButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={selectedFilter ? "default" : "outline"} size="sm" className={cn("h-7 gap-1 text-sm", className)}>
+        <Button
+          variant={selectedFilter ? "default" : "outline"}
+          size="sm"
+          className={cn("h-7 gap-1 text-sm", className)}
+        >
           <ListFilter className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only">
-            {selectedFilter ? list.find((item) => item.value === selectedFilter)?.title : name}
+            {selectedFilter
+              ? list.find((item) => item.value === selectedFilter)?.title
+              : name}
           </span>
         </Button>
       </DropdownMenuTrigger>

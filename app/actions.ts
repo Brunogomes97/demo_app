@@ -1,13 +1,11 @@
 "use server";
 import { cookies } from "next/headers";
 import { fetchAPI } from "../services/api";
-// import { cache } from "react";
 import { AuthSessionResponse, UserProps } from "@/lib/types";
 
 interface LocalSessionProps {
   user: UserProps | null;
 }
-
 
 ///Session Functions
 export const getCurrentSession = async (): Promise<LocalSessionProps> => {
@@ -20,24 +18,21 @@ export const getCurrentSession = async (): Promise<LocalSessionProps> => {
   const result = await getValidatedSessionToken();
 
   if (!result) {
-
     return { user: null };
-
   }
   return result;
 };
 export async function getValidatedSessionToken(): Promise<AuthSessionResponse | null> {
-
   try {
-    const { user } = await fetchAPI<AuthSessionResponse>("auth/session", {
+    const { user } = await fetchAPI<AuthSessionResponse>(`api/auth/session`, {
       method: "GET",
       credentials: "include",
-    })
+    });
 
-    return { user }
+    return { user };
   } catch (error) {
-    console.log(error)
-    return null
+    console.log(error);
+    return null;
   }
 }
 export async function setSessionTokenCookie(token: string): Promise<void> {
@@ -45,9 +40,8 @@ export async function setSessionTokenCookie(token: string): Promise<void> {
   cookieStore.set("access_token", token, {
     httpOnly: true,
     sameSite: "lax",
-    // secure: process.env.NODE_ENV === "production",
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), //30 dias
-    path: "/"
+    path: "/",
   });
 }
 
@@ -57,12 +51,7 @@ export async function deleteSessionTokenCookie(): Promise<void> {
   cookieStore.set("access_token", "", {
     httpOnly: true,
     sameSite: "lax",
-    // secure: process.env.NODE_ENV === "production",
     maxAge: 0,
-    path: "/"
+    path: "/",
   });
 }
-
-
-
-

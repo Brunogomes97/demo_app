@@ -26,12 +26,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { SelectItems } from "@/components/select-items";
-import { noteTypeObjectFormat, noteTypes } from "@/components/constants/data";
+import { categoryTypes } from "@/components/constants/data";
 import { ApiErrorProps } from "@/lib/types";
 import AsyncButton from "@/components/ui/async-button";
 import { toast } from "@/hooks/use-toast";
-import { createNote } from "@/app/(pages)/dashboard/actions";
-import { NoteCreateForm } from "@/app/(pages)/dashboard/types";
+import { createProduct } from "@/app/(pages)/dashboard/actions";
+import { ProductCreateForm } from "@/app/(pages)/dashboard/types";
+import { NumericFormat } from "react-number-format";
 
 const zMessage = {
   min: {
@@ -44,15 +45,17 @@ const zMessage = {
 };
 
 const formSchema = z.object({
-  title: z.string().min(1, zMessage.min).max(50, zMessage.max.title),
-  type: z.enum(["Pessoal", "Trabalho", "Estudo", "Ideia", "Lembrete", "Para fazer", "Meeting"])
-    .transform((value) => noteTypeObjectFormat[value]),
-  description: z.string().min(1, zMessage.min).max(250, { message: zMessage.max.text }),
+  name: z.string().min(1, zMessage.min).max(50, zMessage.max.title),
+  category: z.enum(categoryTypes as [string, ...string[]]),
+  price: z.number().min(0, { message: "Preço inválido" }),
+  description: z
+    .string()
+    .min(1, zMessage.min)
+    .max(250, { message: zMessage.max.text }),
 });
 type FormContentType = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-
 };
 
 export function CreateNoteDialog() {
@@ -62,14 +65,14 @@ export function CreateNoteDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className={cn(buttonVariants({ variant: "default" }))}>
-          <Plus className="mr-2 h-4 w-4" /> Adicionar Nota
+          <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Nota</DialogTitle>
+          <DialogTitle>Adicionar Produto</DialogTitle>
           <DialogDescription>
-            Realize o cadastro da Nota preenchendo os campos abaixo:
+            Realize o cadastro do Produto preenchendo os campos abaixo:
           </DialogDescription>
         </DialogHeader>
         <FormContent open={open} setOpen={setOpen} />
@@ -78,33 +81,29 @@ export function CreateNoteDialog() {
   );
 }
 
-
-
 function FormContent({ setOpen }: FormContentType) {
   const [blockConfirm, setBlockConfirm] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "Minha Nota",
-      type: "Pessoal",
+      name: "Meu Produto",
+      category: "Eletrônicos",
+      price: 0,
       description: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setBlockConfirm(true);
-
     try {
-
       const data = {
-        title: values.title,
-        type: values.type as NoteCreateForm["type"],
-        description: values.description
-      }
-
-      await createNote(data);
-
+        name: values.name,
+        category: values.category as ProductCreateForm["category"],
+        price: values.price,
+        description: values.description,
+      };
+      await createProduct(data);
       toast({
         variant: "success",
         title: "Sucesso.",
@@ -114,7 +113,6 @@ function FormContent({ setOpen }: FormContentType) {
     } catch (err: unknown) {
       const error = err as ApiErrorProps;
 
-      console.error(error);
       toast({
         variant: "destructive",
         title: "Ocorreu um erro ao realizar o cadastro .",
@@ -124,7 +122,6 @@ function FormContent({ setOpen }: FormContentType) {
     } finally {
       setBlockConfirm(false);
     }
-
   }
 
   return (
@@ -133,11 +130,11 @@ function FormContent({ setOpen }: FormContentType) {
         className="flex flex-col gap-4"
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className="grid grid-cols-4 gap-4">
-          <div className="col-span-2">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-1">
             <FormField
               control={form.control}
-              name="title"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
@@ -152,12 +149,43 @@ function FormContent({ setOpen }: FormContentType) {
           <div className="col-span-1">
             <FormField
               control={form.control}
-              name="type"
+              name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo</FormLabel>
+                  <FormLabel>Categoria</FormLabel>
                   <FormControl>
-                    <SelectItems title="Tipo" items={noteTypes} {...field} />
+                    <SelectItems
+                      title="Selecione a Categoria"
+                      items={categoryTypes}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="col-span-1">
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preço</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.floatValue ?? 0);
+                      }}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      decimalScale={2}
+                      fixedDecimalScale
+                      allowNegative={false}
+                      prefix="R$ "
+                      customInput={Input}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,4 +214,3 @@ function FormContent({ setOpen }: FormContentType) {
     </Form>
   );
 }
-

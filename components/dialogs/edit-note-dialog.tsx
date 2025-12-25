@@ -22,18 +22,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { Dispatch, SetStateAction, useState } from "react";
 import { SelectItems } from "@/components/select-items";
-import { noteTypeObjectFormat, noteTypeObjectFormatReverse, noteTypes } from "@/components/constants/data";
-import { NoteCreateForm, NoteData, NotesColumnData } from "@/app/(pages)/dashboard/types";
-import { updateNote } from "@/app/(pages)/dashboard/actions";
+import { categoryTypes } from "@/components/constants/data";
+import { ProductCreateForm, Product } from "@/app/(pages)/dashboard/types";
+import { updateProduct } from "@/app/(pages)/dashboard/actions";
 import { ApiErrorProps } from "@/lib/types";
 import AsyncButton from "@/components/ui/async-button";
 import { toast } from "@/hooks/use-toast";
 
 type EditDialogType<T> = {
   state: [T, Dispatch<SetStateAction<T>>];
-  data: NoteData;
+  data: Product;
 };
-
 
 const zMessage = {
   min: {
@@ -46,17 +45,19 @@ const zMessage = {
 };
 
 const formSchema = z.object({
-  title: z.string().min(1, zMessage.min).max(50, zMessage.max.title),
-  type: z.enum(["Pessoal", "Trabalho", "Estudo", "Ideia", "Lembrete", "Para fazer", "Meeting"])
-    .transform((value) => noteTypeObjectFormat[value]),
-  description: z.string().min(1, zMessage.min).max(250, { message: zMessage.max.text }),
-});
+  name: z.string().min(1, zMessage.min).max(50, zMessage.max.title),
+  category: z.enum(categoryTypes as [string, ...string[]]),
 
+  price: z.number().min(0, { message: "Preço inválido" }),
+  description: z
+    .string()
+    .min(1, zMessage.min)
+    .max(250, { message: zMessage.max.text }),
+});
 type FormContentType = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  data: NotesColumnData;
-
+  data: Product;
 };
 
 export function EditNoteDialog({ data, state }: EditDialogType<boolean>) {
@@ -65,7 +66,7 @@ export function EditNoteDialog({ data, state }: EditDialogType<boolean>) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Editar dados de {data.title}</DialogTitle>
+          <DialogTitle>Editar dados de {data.name}</DialogTitle>
           <DialogDescription>
             Edite os dados da nota preenchendo os campos abaixo:
           </DialogDescription>
@@ -76,35 +77,33 @@ export function EditNoteDialog({ data, state }: EditDialogType<boolean>) {
   );
 }
 
-
 function FormContent({ setOpen, data }: FormContentType) {
   const [blockConfirm, setBlockConfirm] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: data.title,
-      type: noteTypeObjectFormatReverse[data.type],
+      name: data.name,
+      price: data.price,
+      category: data.category,
       description: data.description,
     },
   });
 
   function compareEqual(
-    data: NoteCreateForm,
-    values: z.infer<typeof formSchema>,
+    data: ProductCreateForm,
+    values: z.infer<typeof formSchema>
   ) {
     const valuesToCompare = {
-      title: data.title,
-      type: data.type,
+      title: data.name,
+      category: data.category,
+      price: data.price,
       description: data.description,
     };
-    console.log({ values, valuesToCompare });
-
 
     return JSON.stringify(values) === JSON.stringify(valuesToCompare);
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-
     setBlockConfirm(true);
     try {
       if (compareEqual(data, values)) {
@@ -117,14 +116,13 @@ function FormContent({ setOpen, data }: FormContentType) {
       }
 
       const dataValues = {
-        title: values.title,
-        type: values.type as NoteCreateForm["type"],
+        name: values.name,
+        category: values.category,
+        price: values.price,
         description: values.description,
-      }
-      console.log(dataValues);
+      };
 
-
-      await updateNote(data.id, dataValues);
+      await updateProduct(data.id, dataValues);
 
       toast({
         variant: "success",
@@ -132,7 +130,6 @@ function FormContent({ setOpen, data }: FormContentType) {
         description: "Dados atualizados no Sistema!",
       });
       setOpen(false);
-
     } catch (err: unknown) {
       const error = err as ApiErrorProps;
       toast({
@@ -141,7 +138,6 @@ function FormContent({ setOpen, data }: FormContentType) {
         description: error?.message,
       });
       setOpen(false);
-
     } finally {
       setBlockConfirm(false);
     }
@@ -157,7 +153,7 @@ function FormContent({ setOpen, data }: FormContentType) {
           <div className="col-span-2">
             <FormField
               control={form.control}
-              name="title"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
@@ -172,12 +168,16 @@ function FormContent({ setOpen, data }: FormContentType) {
           <div className="col-span-1">
             <FormField
               control={form.control}
-              name="type"
+              name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo</FormLabel>
+                  <FormLabel>Categoria</FormLabel>
                   <FormControl>
-                    <SelectItems title="Tipo" items={noteTypes} {...field} />
+                    <SelectItems
+                      title="Selecione a Categoria"
+                      items={categoryTypes}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -185,7 +185,6 @@ function FormContent({ setOpen, data }: FormContentType) {
             />
           </div>
         </div>
-
         <FormField
           control={form.control}
           name="description"
@@ -206,4 +205,3 @@ function FormContent({ setOpen, data }: FormContentType) {
     </Form>
   );
 }
-

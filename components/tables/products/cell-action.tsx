@@ -1,6 +1,6 @@
 "use client";
-import { removeNote } from "@/app/(pages)/dashboard/actions";
-import { NotesColumnData } from "@/app/(pages)/dashboard/types";
+import { removeProduct } from "@/app/(pages)/dashboard/actions";
+import { Product } from "@/app/(pages)/dashboard/types";
 import { EditNoteDialog } from "@/components/dialogs/edit-note-dialog";
 import { AlertModal } from "@/components/modal/alert-modal";
 import { Button } from "@/components/ui/button";
@@ -16,27 +16,27 @@ import { Edit, MoreHorizontal, Trash } from "lucide-react";
 import { useState } from "react";
 
 interface CellActionProps {
-  data: NotesColumnData;
+  data: Product;
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
-  const [loading,] = useState(false);
+  const [loading] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const onConfirm = async () => {
     try {
-      await removeNote(data.id);
+      await removeProduct(data.id);
       toast({
         variant: "success",
         title: "Sucesso.",
-        description: "Nota Removida!",
+        description: "Produto Removido!",
       });
     } catch (err) {
       console.error(err);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao remover a Nota",
+        description: "Ocorreu um erro ao remover o produto.",
       });
     }
 
@@ -45,7 +45,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   return (
     <>
       <AlertModal
-        title={`Remover Nota [${data.title}]`}
+        title={`Remover Produto [${data.name}]`}
         description={`Esta ação é destrutiva e não poderá ser desfeita. Confirme se deseja prosseguir.`}
         confirmVariant="destructive"
         isOpen={removeOpen}
