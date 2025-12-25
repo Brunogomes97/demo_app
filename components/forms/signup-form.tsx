@@ -12,46 +12,31 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { useRouter } from 'next/navigation';
-import { useQuery } from "@tanstack/react-query";
-import { FormEvent, useEffect } from "react";
-import { getClientSession } from "@/hooks/provider";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { FormEvent } from "react";
 import { toast } from "@/hooks/use-toast";
 import * as z from "zod";
 
 const formSchema = z
   .object({
-    username: z.string().min(1, { message: "Campo Requerido" }).max(30, { message: "Max de 30 caracteres" }),
+    username: z
+      .string()
+      .min(1, { message: "Campo Requerido" })
+      .max(30, { message: "Max de 30 caracteres" }),
     email: z.string().email({ message: "Insira um email válido" }),
-    password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres" }),
+    password: z
+      .string()
+      .min(6, { message: "A senha deve ter pelo menos 6 caracteres" }),
     passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "As senhas não coincidem",
-    path: ["passwordConfirm"], // Define onde o erro será exibido
+    path: ["passwordConfirm"],
   });
 
 type UserFormValue = z.infer<typeof formSchema>;
 
 export default function SignupForm() {
-
-  const { data, isLoading } = useQuery(getClientSession());
-
-  useEffect(() => {
-    if (isLoading) return
-
-
-    if (data?.user) {
-      toast({
-        title: "Sessão Encontrada!",
-        description: "Deslogue antes de realizar operação.",
-      })
-      router.push("/dashboard");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
-
   const router = useRouter();
 
   const defaultValues = {
@@ -66,7 +51,10 @@ export default function SignupForm() {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: UserFormValue, event?: React.BaseSyntheticEvent | FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (
+    data: UserFormValue,
+    event?: React.BaseSyntheticEvent | FormEvent<HTMLFormElement>
+  ) => {
     event?.preventDefault();
 
     try {
@@ -75,7 +63,6 @@ export default function SignupForm() {
       formData.append("email", email);
       formData.append("password", password);
       formData.append("username", username);
-
 
       const response = await fetch(`/register/api`, {
         method: "POST",
@@ -99,32 +86,25 @@ export default function SignupForm() {
       router.push("/login");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-
       toast({
         variant: "destructive",
         title: "Ocorreu um erro ao realizar operação!",
         description: error?.message,
       });
       console.log(error);
-    }
-    finally {
+    } finally {
       form.reset();
-
-    };
-  }
-  return (
-    <>
-      {
-        isLoading
-          ? <SkeletonCard /> : <AuthFormulary form={form} onSubmit={onSubmit} />}
-    </>
-  );
+    }
+  };
+  return <AuthFormulary form={form} onSubmit={onSubmit} />;
 }
-
 
 interface AuthFormularyProps {
   form: UseFormReturn<UserFormValue>;
-  onSubmit: (data: UserFormValue, event?: React.BaseSyntheticEvent | FormEvent<HTMLFormElement>) => void;
+  onSubmit: (
+    data: UserFormValue,
+    event?: React.BaseSyntheticEvent | FormEvent<HTMLFormElement>
+  ) => void;
 }
 
 function AuthFormulary({ form, onSubmit }: AuthFormularyProps) {
@@ -234,34 +214,5 @@ function AuthFormulary({ form, onSubmit }: AuthFormularyProps) {
         </div>
       </div>
     </>
-  )
-}
-
-function SkeletonCard() {
-
-  return (
-    <div className="space-y-2 w-full animate-pulse">
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <Skeleton className="h-4 w-1/4 rounded" /> {/* Placeholder para o FormLabel de Email */}
-          <Skeleton className="h-10 w-full rounded-md" /> {/* Placeholder para o Input de Email */}
-        </div>
-        <div className="space-y-1">
-          <Skeleton className="h-4 w-1/4 rounded" /> {/* Placeholder para o FormLabel de Senha */}
-          <Skeleton className="h-10 w-full rounded-md" /> {/* Placeholder para o Input de Senha */}
-        </div>
-        <div className="flex justify-end">
-          <Skeleton className="h-10 w-full rounded-md" /> {/* Placeholder para o botão */}
-        </div>
-      </div>
-      <div className="relative mt-4">
-        <div className="absolute inset-0 flex items-center">
-          <Skeleton className="w-full border-t border-muted" /> {/* Placeholder para a borda */}
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground"></span>
-        </div>
-      </div>
-    </div>
   );
 }
