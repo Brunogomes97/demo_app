@@ -1,7 +1,7 @@
 "use client";
 import { removeProduct } from "@/app/(pages)/dashboard/actions";
 import { Product } from "@/app/(pages)/dashboard/types";
-import { EditNoteDialog } from "@/components/dialogs/edit-note-dialog";
+import { EditNoteDialog } from "@/components/dialogs/edit-prod-dialog";
 import { AlertModal } from "@/components/modal/alert-modal";
 import { Button } from "@/components/ui/button";
 import {

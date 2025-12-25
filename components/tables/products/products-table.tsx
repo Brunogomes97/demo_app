@@ -35,7 +35,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ColumnsOptions } from "@/components/tables/column-selector";
 import FilterButton from "@/components/buttons/filter-button";
-import ShowNoteDialog from "@/components/dialogs/show-note-dialog";
+import ShowNoteDialog from "@/components/dialogs/show-prod-dialog";
 import { Product } from "@/app/(pages)/dashboard/types";
 
 interface DataTableProps<TData, TValue> {

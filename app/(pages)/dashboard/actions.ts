@@ -60,20 +60,19 @@ export async function removeProduct(id: string) {
   try {
     const url = `${baseServerRoute}/${id}`;
 
-    const res = await fetchAPI<Product>(url, {
+    const res = await fetchAPI<{ success?: boolean }>(url, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    if (!res.id) {
+    if (!res.success) {
       const error = res as unknown as ApiErrorProps;
       throw new Error("Ocorreu um erro ao remover os dados " + error?.message);
     }
 
     revalidatePath(baseClientRoute);
-    return res;
   } catch (error: unknown) {
     const err = error as ApiErrorProps;
     throw err;

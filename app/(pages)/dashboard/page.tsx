@@ -1,4 +1,4 @@
-import { CreateNoteDialog } from "@/components/dialogs/create-note-dialog";
+import { CreateNoteDialog } from "@/components/dialogs/create-prod-dialog";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { fetchAPI } from "@/services/api";

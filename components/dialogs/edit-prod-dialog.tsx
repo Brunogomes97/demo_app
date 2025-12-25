@@ -1,5 +1,4 @@
 "use client";
-import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,11 +6,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
 import { z } from "zod";
 import {
   Form,
@@ -24,15 +20,20 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { SelectItems } from "@/components/select-items";
 import { categoryTypes } from "@/components/constants/data";
+import { ProductCreateForm, Product } from "@/app/(pages)/dashboard/types";
+import { updateProduct } from "@/app/(pages)/dashboard/actions";
 import { ApiErrorProps } from "@/lib/types";
 import AsyncButton from "@/components/ui/async-button";
 import { toast } from "@/hooks/use-toast";
-import { createProduct } from "@/app/(pages)/dashboard/actions";
-import { ProductCreateForm } from "@/app/(pages)/dashboard/types";
 import { NumericFormat } from "react-number-format";
+
+type EditDialogType<T> = {
+  state: [T, Dispatch<SetStateAction<T>>];
+  data: Product;
+};
 
 const zMessage = {
   min: {
@@ -47,7 +48,8 @@ const zMessage = {
 const formSchema = z.object({
   name: z.string().min(1, zMessage.min).max(50, zMessage.max.title),
   category: z.enum(categoryTypes as [string, ...string[]]),
-  price: z.number().min(0, { message: "Preço inválido" }),
+
+  price: z.number().min(1, { message: "Preço inválido" }),
   description: z
     .string()
     .min(1, zMessage.min)
@@ -56,66 +58,84 @@ const formSchema = z.object({
 type FormContentType = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  data: Product;
 };
 
-export function CreateNoteDialog() {
-  const [open, setOpen] = useState(false);
-
+export function EditNoteDialog({ data, state }: EditDialogType<boolean>) {
+  const [open, setOpen] = state;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className={cn(buttonVariants({ variant: "default" }))}>
-          <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Produto</DialogTitle>
+          <DialogTitle>Editar dados de {data.name}</DialogTitle>
           <DialogDescription>
-            Realize o cadastro do Produto preenchendo os campos abaixo:
+            Edite os dados da nota preenchendo os campos abaixo:
           </DialogDescription>
         </DialogHeader>
-        <FormContent open={open} setOpen={setOpen} />
+        <FormContent open={open} setOpen={setOpen} data={data} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function FormContent({ setOpen }: FormContentType) {
+function FormContent({ setOpen, data }: FormContentType) {
   const [blockConfirm, setBlockConfirm] = useState(false);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "Meu Produto",
-      category: "Eletrônicos",
-      price: 0,
-      description: "",
+      name: data.name,
+      price: data.price,
+      category: data.category,
+      description: data.description,
     },
   });
+
+  function compareEqual(
+    data: ProductCreateForm,
+    values: z.infer<typeof formSchema>
+  ) {
+    const valuesToCompare = {
+      title: data.name,
+      category: data.category,
+      price: data.price,
+      description: data.description,
+    };
+
+    return JSON.stringify(values) === JSON.stringify(valuesToCompare);
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setBlockConfirm(true);
     try {
-      const data = {
+      if (compareEqual(data, values)) {
+        toast({
+          variant: "destructive",
+          title: "Ocorreu um erro ao editar os dados.",
+          description: "Altere ao menos 1 campo.",
+        });
+        return;
+      }
+
+      const dataValues = {
         name: values.name,
-        category: values.category as ProductCreateForm["category"],
+        category: values.category,
         price: values.price,
         description: values.description,
       };
-      await createProduct(data);
+
+      await updateProduct(data.id, dataValues);
+
       toast({
         variant: "success",
         title: "Sucesso.",
-        description: "Nota Registrada no Sistema!",
+        description: "Dados atualizados no Sistema!",
       });
       setOpen(false);
     } catch (err: unknown) {
       const error = err as ApiErrorProps;
-
       toast({
         variant: "destructive",
-        title: "Ocorreu um erro ao realizar o cadastro .",
+        title: "Ocorreu um erro ao editar os dados.",
         description: error?.message,
       });
       setOpen(false);
@@ -130,8 +150,8 @@ function FormContent({ setOpen }: FormContentType) {
         className="flex flex-col gap-4"
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-1">
+        <div className="grid grid-cols-4 gap-4">
+          <div className="col-span-2">
             <FormField
               control={form.control}
               name="name"
@@ -193,7 +213,6 @@ function FormContent({ setOpen }: FormContentType) {
             />
           </div>
         </div>
-
         <FormField
           control={form.control}
           name="description"
