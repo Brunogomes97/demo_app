@@ -1,13 +1,11 @@
-# Gestão de Notas  - App
+# Gestão de Produtos  - App
 
-Um aplicativo de gestão de notas com capacidade de criar, editar, remover e pesquisar notas. O projeto funciona com uma API externa desenvolvida em Nest.js para o servidor. Os usuários podem se logar e registrar no website para ter acesso às funcionalidades.
-
-![Imagem do App](public/app.png)
+Um aplicativo de gestão de notas com capacidade de criar, editar, remover e pesquisar Produtos. O projeto funciona com uma API externa desenvolvida em ASP.NET para o servidor. Os usuários podem se logar e registrar no website para ter acesso às funcionalidades.
 
 ## 🔗 Demonstração
 
-- Aplicação (demo): [Gestão de Notas](https://w-client.vercel.app/)
-- API Externa (Nest JS): [Repositório da API](https://github.com/Brunogomes97/w_server)
+- API Externa (ASP .NET): [Repositório da API](https://github.com/Brunogomes97/demo_api)
+- Script para docker-compose em prod: [Scripts](https://github.com/Brunogomes97/demo_scripts)
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -31,8 +29,8 @@ Antes de começar, certifique-se de ter instalado:
 ### Clonando o Repositório
 
 ```bash
-git clone https://github.com/Brunogomes97/w_client.git
-cd w_client
+git clone https://github.com/Brunogomes97/demo_app.git
+cd demo_app
 ```
 
 ### Instalando Dependências
@@ -70,7 +68,7 @@ npm run build && npm start
 ## 🖥️ Estrutura do Projeto
 
 ```
-📚 W_CLIENT
+📚 demo_app
  ┓ 📚 .next            # Build gerada pelo Next.js
  ┓ 📚 app             
  ┗ ┓ 📚 (pages)        # Páginas da aplicação
@@ -88,6 +86,8 @@ npm run build && npm start
  ┓ 📄 .gitignore      # Arquivos ignorados pelo Git
  ┓ 📄 package.json    # Dependências e scripts
  ┓ 📄 README.md       # Documentação
+ ┓ 📄 Dockerfile      # Dockerfile prod
+
 ```
 
 ## 🛠️ Comandos Úteis
